@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Models\Reservation;
+use App\Models\ApprovalNotesModel;
+use App\Models\DetailReservationModel;
 use App\Models\ReservationModel;
 use App\Models\VehiclesModel;
 use App\Models\DriversModel;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -64,7 +66,7 @@ class AllController extends Controller
         $driver = DriversModel::find($request->id_drivers);
         $vehicle = VehiclesModel::find($request->id_vehicles);
 
-        if ($driver->status === 'assigned' || $vehicle->status === 'pending' || $vehicle->status === 'in_used') {
+        if ($driver->status === 'pending' || $driver->status === 'assigned' || $vehicle->status === 'pending' || $vehicle->status === 'in_used') {
             return response()->json([
                 'success' => false,
                 'message' => 'The vehicle or driver is already assigned, pending, or in use.'
@@ -73,85 +75,181 @@ class AllController extends Controller
             $request->validate([
                 'id_vehicles' => 'required|exists:vehicles,id_vehicles',
                 'id_drivers' => 'required|exists:drivers,id_drivers',
+                'approver_id' => 'required|exists:users,id_users,role,approver',
                 'start_date' => 'required|date',
                 'end_date' => 'required|date',
                 'purpose' => 'required|string',
-                'approver2' => 'nullable|exists:users,id_users'
+                'admin_approval' => 'required|in:approved,rejected',
             ]);
 
             $reservation = ReservationModel::create([
                 'id_users' => $user->id_users,
                 'id_vehicles' => $request->id_vehicles,
                 'id_drivers' => $request->id_drivers,
+                'approver_id' => $request->approver_id,
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
                 'purpose' => $request->purpose,
-                'approver1' => $user->id_users,
-                'approver2' => $request->approver2
+                'admin_approval' => $request->admin_approval,
             ]);
 
-            if ($request->id_drivers) {
-                DriversModel::where('id_drivers', $request->id_drivers)->update([
-                    'status' => 'assigned'
-                ]);
-            }
 
-            VehiclesModel::where('id_vehicles', $request->id_vehicles)->update([
+            $driver = DriversModel::find($request->id_drivers);
+            $driverupdate = $driver->update([
                 'status' => 'pending'
             ]);
 
-            return response()->json(['success' => true, 'message' => 'Reservation created successfully.']);
+            $vehicle = VehiclesModel::find($request->id_vehicles);
+            $vehicleupdate = $vehicle->update([
+                'status' => 'pending'
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Reservation created successfully.',
+                'data' => [
+                    'reservation' => $reservation,
+                    'driver' => $driver->toArray(),
+                    'vehicle' => $vehicle->toArray()
+                ]
+            ]);
         }
 
     }
 
     // Approve a reservation
-    public function approveReservation($id, Request $request)
+
+    // Approve a reservation
+    public function approveReservation(Request $request)
     {
         $user = Auth::user();
 
-        // Ensure the user is either an admin or an approver
-        if ($user->role !== 'admin' && $user->role !== 'approver') {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
-        $reservation = ReservationModel::findOrFail($id);
-
-        // Admin can approve or any approver assigned to this reservation can approve
-        if ($user->role === 'admin' || $reservation->approver_id === $user->id) {
-            $request->validate([
-                'approval_note' => 'required|string'
-            ]);
-
-            $reservation->status = 'approved';
-            $reservation->save();
-
-            // Optionally, store the approval note
-            // ApprovalNote::create([
-            //     'reservation_id' => $reservation->id,
-            //     'approver_id' => $user->id,
-            //     'note' => $request->approval_note
-            // ]);
-
-            return response()->json(['success' => true, 'message' => 'Reservation approved successfully.']);
-        }
-
-        return response()->json(['message' => 'Unauthorized'], 403);
-    }
-
-    // List pending reservations (for approvers)
-    public function listPendingReservations()
-    {
-        $user = Auth::user();
-
+        // Ensure the user is an approver
         if ($user->role !== 'approver') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $reservations = ReservationModel::where('status', 'pending')->get();
+        $request->validate([
+            'id_reservations' => 'required|exists:reservations,id_reservations',
+            'approval_note' => 'required|string',
+            'affirmation_status' => 'required|in:approved,rejected',
+        ]);
+
+        $reservation = ReservationModel::find($request->id_reservations);
+
+        if ($reservation->approver_id !== $user->id_users) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $reservation->update([
+            'affirmation_approval' => $request->affirmation_status
+        ]);
+        if ($reservation->admin_approval === 'approved' && $reservation->affirmation_approval === 'approved') {
+            $vehicle = VehiclesModel::where('id_vehicles', $reservation->id_vehicles)->first();
+            $driver = DriversModel::where('id_drivers', $reservation->id_drivers)->first();
+
+            $vehicle->update(['status' => 'in_used']);
+            $driver->update(['status' => 'assigned']);
+        }
+        ApprovalNotesModel::create([
+            'id_reservations' => $reservation->id_reservations,
+            'approver_id' => $user->id_users,
+            'note' => $request->approval_note
+        ]);
+
+        return response()->json([
+            'message' => 'Reservation approved successfully.',
+            'reservation' => $reservation,
+            'approval_notes' => ApprovalNotesModel::where('id_reservations', $reservation->id_reservations)->latest()->first()
+        ]);
+    }
+    // List pending reservations (for approvers)
+    public function listPendingReservations()
+    {
+
+        $reservations = ReservationModel::where(function ($query) {
+            $query->where('admin_approval', 'pending')->orWhere('affirmation_approval', 'pending');
+        })->get();
+
+        return response()->json($reservations);
+    }
+    public function listPendingVehicles()
+    {
+
+
+        $vehicle = VehiclesModel::where('status', 'pending')->get();
+
+        return response()->json($vehicle);
+    }
+    public function listPendingDrivers()
+    {
+
+
+        $driver = DriversModel::where('status', 'pending')->get();
+
+        return response()->json($driver);
+    }
+
+
+    // Get all reservations
+    public function getReservations()
+    {
+        $reservations = ReservationModel::all();
 
         return response()->json($reservations);
     }
 
-    // Other methods (e.g., for dashboard) can be added here
+    public function getVehicle()
+    {
+        $vehicle = VehiclesModel::all();
+
+        return response()->json($vehicle);
+    }
+    public function getDrivers()
+    {
+        $drivers = DriversModel::all();
+
+        return response()->json($drivers);
+    }
+    public function getAuth()
+    {
+        $user = User::all();
+
+        return response()->json($user);
+    }
+    
+    public function createDetailReservation(Request $request)
+    {
+        $user = Auth::user();
+        if ($user->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'id_reservations' => 'required|exists:reservations,id_reservations',
+            'id_vehicles' => 'required|exists:vehicles,id_vehicles',
+            'id_drivers' => 'required|exists:drivers,id_drivers'
+        ]);
+
+        $reservation = ReservationModel::find($request->id_reservations);
+
+        if ($reservation->admin_approval !== 'approved' || $reservation->affirmation_approval !== 'approved') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Reservation not approved'
+            ], 400);
+        }
+
+        $detail_reservation = DetailReservationModel::create([
+            'id_reservations' => $request->id_reservations,
+            'id_vehicles' => $request->id_vehicles,
+            'id_drivers' => $request->id_drivers
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Detail Reservation created successfully',
+            'data' => $detail_reservation
+        ]);
+    }
 }

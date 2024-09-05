@@ -11,7 +11,6 @@ class VehiclesModel extends Model
     use HasFactory;
     protected $table = 'vehicles';
     protected $primaryKey = 'id_vehicles';
-    protected $keyType = 'int';
     public $timestamps = true;
     protected $fillable = ['plate_number', 'model', 'ownership', 'status', 'locations'];
 

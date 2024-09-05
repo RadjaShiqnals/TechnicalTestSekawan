@@ -10,8 +10,7 @@ class ReservationModel extends Model
     protected $table = 'reservations';
     protected $primaryKey = 'id_reservations';
     public $timestamps = true;
-    protected $keyType = 'int';
-    protected $fillable = ['id_users', 'id_vehicles', 'id_drivers', 'start_date', 'end_date', 'purpose', 'approver1', 'approver2'];
+    protected $fillable = ['id_users', 'id_vehicles', 'id_drivers', 'start_date', 'end_date','approver_id','purpose', 'admin_approval', 'affirmation_approval'];
 
     public function user()
     {

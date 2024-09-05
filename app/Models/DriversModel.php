@@ -11,7 +11,6 @@ class DriversModel extends Model
     protected $table = 'drivers';
     protected $primaryKey = 'id_drivers';
     public $timestamps = true;
-    protected $keyType = 'int';
     protected $fillable = ['name', 'status'];
 
     public function reservations()
