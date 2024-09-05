@@ -12,7 +12,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class AllController extends Controller
+class AllControllerWeb extends Controller
 {
 
     // Create a new vehicle
@@ -118,7 +118,8 @@ class AllController extends Controller
                 'status' => 'pending'
             ]);
 
-            return redirect()->route('reservations')->with('success', 'Reservation created successfully');;
+            // Return the reservation
+            return redirect()->route('reservations');
         }
 
     }
@@ -182,7 +183,7 @@ class AllController extends Controller
             'note' => $request->approval_note
         ]);
 
-        return response()->json([
+        return redirect()->route('reservations', $reservation->id_reservations)->with([
             'message' => 'Reservation approved successfully.',
             'reservation' => $reservation,
             'approval_notes' => ApprovalNotesModel::where('id_reservations', $reservation->id_reservations)->latest()->first()
@@ -228,18 +229,18 @@ class AllController extends Controller
     public function getReservations()
     {
         // Get all reservations
-        $reservations = ReservationModel::all();
+        ReservationModel::all();
 
-        return response()->json($reservations);
+        return view('reservations');
     }
 
     // Get all vehicles
     public function getVehicle()
     {
         // Get all vehicles
-        $vehicle = VehiclesModel::all();
+        VehiclesModel::all();
 
-        return response()->json($vehicle);
+        return view('reservations');
     }
 
     // Get all drivers
@@ -261,7 +262,7 @@ class AllController extends Controller
     }
 
     // Create a new detail reservation
-    
+
     public function createDetailReservation(Request $request)
     {
         // Check if the user is authenticated
@@ -292,7 +293,7 @@ class AllController extends Controller
                 'fuel_consumption' => $request->fuel_consumption,
                 'note' => $request->note
             ]);
-    
+
             return response()->json([
                 'success' => true,
                 'message' => 'Detail Reservation created successfully',

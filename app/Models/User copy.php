@@ -8,7 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable implements JWTSubject
+class Usercopy extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable;
     protected $primaryKey = 'id_users';
