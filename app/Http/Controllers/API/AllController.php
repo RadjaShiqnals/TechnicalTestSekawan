@@ -12,11 +12,11 @@ use Illuminate\Support\Facades\Auth;
 
 class AllController extends Controller
 {
-    
+
     public function createVehicle(Request $request)
     {
         $user = Auth::user();
-        
+
         // Ensure the user is an admin
         if ($user->role !== 'admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
@@ -37,7 +37,7 @@ class AllController extends Controller
             'status' => $request->status,
             'locations' => $request->locations
         ]);
-        
+
         if ($vehicle) {
             return response()->json([
                 'success' => true,
@@ -55,20 +55,11 @@ class AllController extends Controller
     public function createReservation(Request $request)
     {
         $user = Auth::user();
-        
+
         // Ensure the user is an admin
         if ($user->role !== 'admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
-
-        $request->validate([
-            'id_vehicles' => 'required|exists:vehicles,id_vehicles',
-            'id_drivers' => 'required|exists:drivers,id_drivers',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date',
-            'purpose' => 'required|string',
-            'approver2' => 'nullable|exists:users,id_users'
-        ]);
 
         $driver = DriversModel::find($request->id_drivers);
         $vehicle = VehiclesModel::find($request->id_vehicles);
@@ -78,44 +69,54 @@ class AllController extends Controller
                 'success' => false,
                 'message' => 'The vehicle or driver is already assigned, pending, or in use.'
             ], 400);
-        }
-
-        $reservation = ReservationModel::create([
-            'id_users' => $user->id_users,
-            'id_vehicles' => $request->id_vehicles,
-            'id_drivers' => $request->id_drivers,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-            'purpose' => $request->purpose,
-            'approver1' => $user->id_users,
-            'approver2' => $request->approver2
-        ]);
-
-        if ($request->id_drivers) {
-            DriversModel::where('id_drivers', $request->id_drivers)->update([
-                'status' => 'assigned'
+        } else {
+            $request->validate([
+                'id_vehicles' => 'required|exists:vehicles,id_vehicles',
+                'id_drivers' => 'required|exists:drivers,id_drivers',
+                'start_date' => 'required|date',
+                'end_date' => 'required|date',
+                'purpose' => 'required|string',
+                'approver2' => 'nullable|exists:users,id_users'
             ]);
+
+            $reservation = ReservationModel::create([
+                'id_users' => $user->id_users,
+                'id_vehicles' => $request->id_vehicles,
+                'id_drivers' => $request->id_drivers,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+                'purpose' => $request->purpose,
+                'approver1' => $user->id_users,
+                'approver2' => $request->approver2
+            ]);
+
+            if ($request->id_drivers) {
+                DriversModel::where('id_drivers', $request->id_drivers)->update([
+                    'status' => 'assigned'
+                ]);
+            }
+
+            VehiclesModel::where('id_vehicles', $request->id_vehicles)->update([
+                'status' => 'pending'
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Reservation created successfully.']);
         }
 
-        VehiclesModel::where('id_vehicles', $request->id_vehicles)->update([
-            'status' => 'pending'
-        ]);
-
-        return response()->json(['success' => true, 'message' => 'Reservation created successfully.']);
     }
 
     // Approve a reservation
     public function approveReservation($id, Request $request)
     {
         $user = Auth::user();
-        
+
         // Ensure the user is either an admin or an approver
         if ($user->role !== 'admin' && $user->role !== 'approver') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
         $reservation = ReservationModel::findOrFail($id);
-        
+
         // Admin can approve or any approver assigned to this reservation can approve
         if ($user->role === 'admin' || $reservation->approver_id === $user->id) {
             $request->validate([
@@ -142,7 +143,7 @@ class AllController extends Controller
     public function listPendingReservations()
     {
         $user = Auth::user();
-        
+
         if ($user->role !== 'approver') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
