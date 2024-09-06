@@ -19,6 +19,10 @@ Route::get('/make-reservations', function () {
     return view('make_reservations');
 })->name('make_reservations');
 
+Route::get('/detail_reservation', function () {
+    return view('detail_reservation');
+})->name('detail_reservation');
+
 Route::get('/make-detail-reservations', function () {
     return view('make_detail_reservations');
 })->name('make_detail_reservations');

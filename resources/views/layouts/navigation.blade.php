@@ -20,6 +20,10 @@
                         {{ __('Reservations') }}
                     </x-nav-link>
 
+                    <x-nav-link :href="route('detail_reservation')" :active="request()->routeIs('detail_reservation')">
+                        {{ __('Detail Reservation') }}
+                    </x-nav-link>
+
                     <x-nav-link :href="route('vehicles')" :active="request()->routeIs('vehicles')">
                         {{ __('Vehicles') }}
                     </x-nav-link>

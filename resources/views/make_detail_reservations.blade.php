@@ -11,15 +11,14 @@
                 <div class="p-6 text-gray-900">
                     <form action="{{ route('detail_reservations.create') }}" method="POST">
                         @csrf
-
                         <div class="mt-4">
                             <label for="id_reservations" class="block text-sm font-medium text-gray-700">Detail Reservation</label>
                             <select id="id_reservations" name="id_reservations"
                                 class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                 required>
                                 <option value="">Select a reservation</option>
-                                @foreach (App\Models\DetailReservationModel::all() as $detail)
-                                    <option value="{{ $detail->id_reservations }}">
+                                @foreach (App\Models\ReservationModel::where('admin_approval', 'approved')->where('affirmation_approval', 'approved')->get() as $detail)
+                                    <option value="{{$detail->id_reservations}}">
                                         {{ $detail->id_reservations }}
                                     </option>
                                 @endforeach
