@@ -118,7 +118,19 @@ class AllController extends Controller
                 'status' => 'pending'
             ]);
 
-            return redirect()->route('reservations')->with('success', 'Reservation created successfully');;
+            // Check if the reservation was created successfully
+            if ($reservation) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Reservation created successfully.',
+                    'data' => $reservation
+                ], 201);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Reservation creation failed.'
+                ], 400);
+            }
         }
 
     }

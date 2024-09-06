@@ -43,8 +43,8 @@
             <x-input-label for="role" :value="__('Role')" />
 
             <select id="role" name="role" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                <option value="affirmation" {{ old('role', 'affirmation') == 'affirmation' ? 'selected' : '' }}>Affirmation</option>
-                <option value="admin" {{ old('role', 'user') == 'admin' ? 'selected' : '' }}>Admin</option>
+                <option value="admin">Admin</option>
+                <option value="approver">Approver</option>
             </select>
 
             <x-input-error :messages="$errors->get('role')" class="mt-2" />

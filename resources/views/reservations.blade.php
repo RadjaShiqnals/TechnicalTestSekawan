@@ -12,13 +12,16 @@
                     <a href="{{ route('make_reservations') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 focus:outline-none focus:border-gray-900 focus:ring ring-gray-300 disabled:opacity-25 transition ease-in-out duration-150">
                         Make Reservation
                     </a>
+                    <a href="{{ route('make_detail_reservations') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 focus:outline-none focus:border-gray-900 focus:ring ring-gray-300 disabled:opacity-25 transition ease-in-out duration-150">
+                        Make Detail Reservation
+                    </a>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
                         @foreach(App\Models\ReservationModel::all() as $reservation)
                             <div class="border border-gray-300 rounded-lg p-4 shadow-lg">
-                                <h3 class="font-semibold text-lg">{{ $reservation->vehicle->model }}</h3>
-                                <p><strong>User:</strong> {{ $reservation->id_users }}</p>
-                                <p><strong>Vehicle:</strong> {{ $reservation->id_vehicles }}</p>
-                                <p><strong>Driver:</strong> {{ $reservation->id_drivers }}</p>
+                                <h3 class="font-semibold text-lg">{{ $reservation->vehicle->model }} - ID {{ $reservation->id_reservations }}</h3>
+                                <p><strong>User:</strong> {{ App\Models\User::where('id_users', $reservation->id_users)->first()->name }}</p>
+                                <p><strong>Vehicle:</strong> {{ App\Models\VehiclesModel::where('id_vehicles', $reservation->id_vehicles)->first()->model }}</p>
+                                <p><strong>Driver:</strong> {{ App\Models\DriversModel::where('id_drivers', $reservation->id_drivers)->first()->name }}</p>
                                 <p><strong>Start Date:</strong> {{ $reservation->start_date }}</p>
                                 <p><strong>End Date:</strong> {{ $reservation->end_date }}</p>
                                 <p><strong>Approver:</strong> {{ App\Models\User::where('id_users', $reservation->approver_id)->first()->name }}</p>

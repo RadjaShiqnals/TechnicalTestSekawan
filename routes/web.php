@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AllController;
+use App\Http\Controllers\API\AllControllerWeb;
 
 Route::get('/', function () {
     return view('welcome');
@@ -17,6 +18,10 @@ Route::get('/reservations', function () {
 Route::get('/make-reservations', function () {
     return view('make_reservations');
 })->name('make_reservations');
+
+Route::get('/make-detail-reservations', function () {
+    return view('make_detail_reservations');
+})->name('make_detail_reservations');
 
 Route::get('/approve-reservations', function () {
     return view('approve_reservations');
@@ -40,27 +45,27 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 // Route to create a new reservation
-Route::post('/createReservations', [AllController::class, 'createReservation'])->name('reservations.create');
+Route::post('/createReservationsWeb', [AllControllerWeb::class, 'createReservation'])->name('reservations.create');
 // Route to create a new reservation
-Route::post('/createVehicle', [AllController::class, 'createVehicle'])->name('vehicles.create');
+Route::post('/createVehicleWeb', [AllControllerWeb::class, 'createVehicle'])->name('vehicles.create');
 // Route to create a new detail reservation
-Route::post('/createDetailReservation', [AllController::class, 'createDetailReservation'])->name('detail_reservations.create');
+Route::post('/createDetailReservationWeb', [AllControllerWeb::class, 'createDetailReservation'])->name('detail_reservations.create');
 // Route to approve a reservation
-Route::post('/reservations/approve', [AllController::class, 'approveReservation'])->name('reservations.approve');
+Route::post('/reservations/approveWeb', [AllControllerWeb::class, 'approveReservation'])->name('reservations.approve');
 // Route to get all pending Reservation
-Route::get('/listPendingReservations', [AllController::class, 'listPendingReservations'])->name('reservations.list_pending');
+Route::get('/listPendingReservationsWeb', [AllControllerWeb::class, 'listPendingReservations'])->name('reservations.list_pending');
 // Route to get all pending Vehicles
-Route::get('/listPendingVehicles', [AllController::class, 'listPendingVehicles'])->name('vehicles.list_pending');
+Route::get('/listPendingVehiclesWeb', [AllControllerWeb::class, 'listPendingVehicles'])->name('vehicles.list_pending');
 // Route to get all pending Drivers
-Route::get('/listPendingDrivers', [AllController::class, 'listPendingDrivers'])->name('drivers.list_pending');
+Route::get('/listPendingDriversWeb', [AllControllerWeb::class, 'listPendingDrivers'])->name('drivers.list_pending');
 // Route to get all reservations
-Route::get('/getReservations', [AllController::class, 'getReservations'])->name('reservations.get_all');
+Route::get('/getReservationsWeb', [AllControllerWeb::class, 'getReservations'])->name('reservations.get_all');
 // Route to get all Vehicle
-Route::get('/getVehicle', [AllController::class, 'getVehicle'])->name('vehicles.get_all');
+Route::get('/getVehicleWeb', [AllControllerWeb::class, 'getVehicle'])->name('vehicles.get_all');
 // Route to get all Drivers
-Route::get('/getDrivers', [AllController::class, 'getDrivers'])->name('drivers.get_all');
+Route::get('/getDriversWeb', [AllControllerWeb::class, 'getDrivers'])->name('drivers.get_all');
 // Route to get all Auth
-Route::get('/getAuth', [AllController::class, 'getAuth'])->name('auth.get_all');
+Route::get('/getAuthWeb', [AllControllerWeb::class, 'getAuth'])->name('auth.get_all');
 
 
 require __DIR__ . '/auth.php';

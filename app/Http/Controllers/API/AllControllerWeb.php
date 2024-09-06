@@ -119,7 +119,7 @@ class AllControllerWeb extends Controller
             ]);
 
             // Return the reservation
-            return redirect()->route('reservations');
+            return redirect()->route('reservations')->with('success', 'Reservation created successfully');;
         }
 
     }
