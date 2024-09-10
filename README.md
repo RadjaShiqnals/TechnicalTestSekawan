@@ -64,9 +64,5 @@ The code is organized into the following directories:
 * `app`: Contains the application logic, including controllers, models, and views.
 * `resources`: Contains the view templates and assets.
 * `routes`: Defines the application routes.
-**Key Files**
-* `app/Http/Controllers/AdminController.php`: Handles admin-related logic.
-* `app/Http/Controllers/ApproverController.php`: Handles approver-related logic.
-* `resources/views/approve_reservations.blade.php`: View template for approver to approve reservations.
-* `resources/views/create_reservation.blade.php`: View template for admin to create reservations.
+
 Note: This documentation is a breakdown of the provided code snippets and may not cover all aspects of the application.
